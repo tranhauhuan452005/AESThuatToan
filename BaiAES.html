@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AES Encryption/Decryption Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<style>
+:root {
+    --primary: #4e54c8;
+    --secondary: #8f94fb;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    color: var(--dark);
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+}
+
+h1 {
+    color: var(--light);
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 10px 10px 0 0;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.tab.active {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--primary);
+    box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tab:not(.active) {
+    background-color: rgba(255, 255, 255, 0.5);
+    color: var(--dark);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    transition: border 0.3s;
+    box-sizing: border-box;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.2);
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+button {
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.button-group button {
+    flex: 1;
+}
+
+.upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.upload-area:hover, .upload-area.dragover {
+    border-color: var(--primary);
+    background-color: rgba(78, 84, 200, 0.05);
+}
+
+.upload-icon {
+    font-size: 40px;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.file-info {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.result-area {
+    background-color: rgba(248, 249, 250, 0.9);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    border-left: 4px solid var(--primary);
+}
+
+.alert {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-left: 4px solid var(--success);
+    color: #155724;
+}
+
+.alert-error {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-left: 4px solid var(--danger);
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-left: 4px solid var(--warning);
+    color: #856404;
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.progress {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--secondary), var(--primary));
+    transition: width 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo and branding */
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.logo img {
+    height: 60px;
+    margin-right: 10px;
+}
+
+.logo-text {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .card {
+        padding: 20px;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="logo">
+    <div class="logo-text">AES Encryption Tool</div>
+</div>
+
+<h1>Mã hóa và Giải mã AES</h1>
+
+<div class="tabs">
+    <div class="tab active" data-tab="text">Mã hóa/Giải mã Văn bản</div>
+    <div class="tab" data-tab="file">Mã hóa/Giải mã File</div>
+</div>
+
+<div class="card">
+    <div id="alerts"></div>
+    
+    <!-- Text Encryption/Decryption -->
+    <div class="tab-content active" id="text-tab">
+        <div class="form-group">
+            <label for="key">Khóa mã hóa:</label>
+            <input type="text" id="key" placeholder="Nhập khóa mã hóa của bạn">
+        </div>
+        
+        <div class="form-group">
+            <label for="key-size">Độ dài khóa:</label>
+            <select id="key-size">
+                <option value="128">128 bit</option>
+                <option value="192">192 bit</option>
+                <option value="256" selected>256 bit</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="input-text">Văn bản đầu vào:</label>
+            <textarea id="input-text" placeholder="Nhập văn bản để mã hóa hoặc văn bản đã mã hóa để giải mã"></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button id="encrypt-text">Mã hóa</button>
+            <button id="decrypt-text">Giải mã</button>
+        </div>
+        
+        <div id="text-result" class="result-area" style="display: none;">
+            <h3>Kết quả:</h3>
+            <div id="result-content"></div>
+            <div class="button-group" style="margin-top: 15px;">
+                <button id="copy-result">Sao chép kết quả</button>
+                <button id="download-text-result" class="download-button">Tải xuống kết quả</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- File Encryption/Decryption -->
+    <div class="tab-content" id="file-tab">
+        <div class="form-group">
+            <label for="file-key">Khóa mã hóa:</label>
+            <input type="text" id="file-key" placeholder="Nhập khóa mã hóa của bạn">
+        </div>
+        
+        <div class="form-group">
+            <label for="file-key-size">Độ dài khóa:</label>
+            <select id="file-key-size">
+                <option value="128">128 bit</option>
+                <option value="192">192 bit</option>
+                <option value="256" selected>256 bit</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Tải lên file:</label>
+            <div id="upload-area" class="upload-area">
+                <div class="upload-icon">📁</div>
+                <p>Kéo thả file vào đây hoặc <strong>click để chọn file</strong></p>
+                <input type="file" id="file-input" style="display: none;">
+            </div>
+            <div id="file-info" class="file-info"></div>
+        </div>
+        
+        <div class="progress-bar" style="display: none;">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="button-group">
+            <button id="encrypt-file">Mã hóa File</button>
+            <button id="decrypt-file">Giải mã File</button>
+        </div>
+        
+        <div id="file-result" style="margin-top: 20px; display: none;">
+            <button id="download-result" class="button-primary download-button">Tải xuống File</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const tabId = tab.getAttribute('data-tab');
+        
+        // Deactivate all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activate selected tab
+        tab.classList.add('active');
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+    });
+});
+
+// Show alerts
+function showAlert(message, type = 'success') {
+    const alertsContainer = document.getElementById('alerts');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    
+    alertsContainer.appendChild(alert);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        alert.style.opacity = '0';
+        setTimeout(() => alertsContainer.removeChild(alert), 500);
+    }, 5000);
+}
+
+// Text encryption
+document.getElementById('encrypt-text').addEventListener('click', () => {
+    const key = document.getElementById('key').value;
+    const keySize = parseInt(document.getElementById('key-size').value);
+    const text = document.getElementById('input-text').value;
+    
+    if (!key) {
+        showAlert('Vui lòng nhập khóa mã hóa', 'error');
+        return;
+    }
+    
+    if (!text) {
+        showAlert('Vui lòng nhập văn bản để mã hóa', 'error');
+        return;
+    }
+    
+    try {
+        // Generate key based on provided password and key size
+        const salt = CryptoJS.lib.WordArray.random(128/8);
+        const derivedKey = CryptoJS.PBKDF2(key, salt, {
+            keySize: keySize/32,
+            iterations: 1000
+        });
+        
+        // Generate random IV
+        const iv = CryptoJS.lib.WordArray.random(128/8);
+        
+        // Encrypt
+        const encrypted = CryptoJS.AES.encrypt(text, derivedKey, { 
+            iv: iv,
+            padding: CryptoJS.pad.Pkcs7,
+            mode: CryptoJS.mode.CBC
+        });
+        
+        // Combine the salt, iv, and ciphertext for storage
+        const result = salt.toString() + iv.toString() + encrypted.toString();
+        
+        document.getElementById('result-content').textContent = result;
+        document.getElementById('text-result').style.display = 'block';
+        
+        showAlert('Mã hóa thành công!', 'success');
+    } catch (error) {
+        showAlert('Lỗi mã hóa: ' + error.message, 'error');
+    }
+});
+
+// Text decryption
+document.getElementById('decrypt-text').addEventListener('click', () => {
+    const key = document.getElementById('key').value;
+    const keySize = parseInt(document.getElementById('key-size').value);
+    const encryptedText = document.getElementById('input-text').value;
+    
+    if (!key) {
+        showAlert('Vui lòng nhập khóa giải mã', 'error');
+        return;
+    }
+    
+    if (!encryptedText) {
+        showAlert('Vui lòng nhập văn bản đã mã hóa để giải mã', 'error');
+        return;
+    }
+    
+    try {
+        // Extract salt, iv and ciphertext
+        const saltSize = 128 / 4; // 32 hex characters
+        const ivSize = 128 / 4; // 32 hex characters
+        
+        const salt = CryptoJS.enc.Hex.parse(encryptedText.substring(0, saltSize));
+        const iv = CryptoJS.enc.Hex.parse(encryptedText.substring(saltSize, saltSize + ivSize));
+        const ciphertext = encryptedText.substring(saltSize + ivSize);
+        
+        // Generate key based on provided password and key size
+        const derivedKey = CryptoJS.PBKDF2(key, salt, {
+            keySize: keySize/32,
+            iterations: 1000
+        });
+        
+        // Decrypt
+        const decrypted = CryptoJS.AES.decrypt(ciphertext, derivedKey, { 
+            iv: iv,
+            padding: CryptoJS.pad.Pkcs7,
+            mode: CryptoJS.mode.CBC
+        });
+        
+        const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+        
+        if (!decryptedText) {
+            throw new Error('Khóa không đúng hoặc văn bản đã bị hỏng');
+        }
+        
+        document.getElementById('result-content').textContent = decryptedText;
+        document.getElementById('text-result').style.display = 'block';
+        
+        showAlert('Giải mã thành công!', 'success');
+    } catch (error) {
+        showAlert('Lỗi giải mã: ' + error.message, 'error');
+    }
+});
+
+// Copy result
+document.getElementById('copy-result').addEventListener('click', () => {
+    const resultContent = document.getElementById('result-content').textContent;
+    navigator.clipboard.writeText(resultContent)
+        .then(() => showAlert('Đã sao chép vào clipboard!', 'success'))
+        .catch(err => showAlert('Lỗi khi sao chép: ' + err, 'error'));
+});
+
+// File drag & drop handling
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+let selectedFile = null;
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    if (e.dataTransfer.files.length) {
+        handleFileSelect(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+        handleFileSelect(e.target.files[0]);
+    }
+});
+
+function handleFileSelect(file) {
+    selectedFile = file;
+    document.getElementById('file-info').textContent = `File đã chọn: ${file.name} (${formatFileSize(file.size)})`;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// File encryption
+document.getElementById('encrypt-file').addEventListener('click', async () => {
+    const key = document.getElementById('file-key').value;
+    const keySize = parseInt(document.getElementById('file-key-size').value);
+    
+    if (!key) {
+        showAlert('Vui lòng nhập khóa mã hóa', 'error');
+        return;
+    }
+    
+    if (!selectedFile) {
+        showAlert('Vui lòng chọn file để mã hóa', 'error');
+        return;
+    }
+    
+    try {
+        const progressBar = document.querySelector('.progress-bar');
+        const progress = document.getElementById('progress');
+        progressBar.style.display = 'block';
+        progress.style.width = '30%';
+        
+        // Generate salt and key
+        const salt = CryptoJS.lib.WordArray.random(128/8);
+        const derivedKey = CryptoJS.PBKDF2(key, salt, {
+            keySize: keySize/32,
+            iterations: 1000
+        });
+        
+        // Generate IV
+        const iv = CryptoJS.lib.WordArray.random(128/8);
+        
+        // Read the file
+        const fileData = await readFileAsArrayBuffer(selectedFile);
+        progress.style.width = '50%';
+        const wordArray = CryptoJS.lib.WordArray.create(fileData);
+        
+        // Encrypt
+        const encrypted = CryptoJS.AES.encrypt(wordArray, derivedKey, { 
+            iv: iv,
+            padding: CryptoJS.pad.Pkcs7,
+            mode: CryptoJS.mode.CBC
+        });
+        
+        progress.style.width = '80%';
+        
+        // Combine salt, iv and encrypted data
+        const encryptedHex = salt.toString() + iv.toString() + encrypted.toString();
+        
+        // Create blob and download link
+        const encryptedBlob = new Blob([encryptedHex], { type: 'application/octet-stream' });
+        const downloadUrl = URL.createObjectURL(encryptedBlob);
+        
+        // Store the file info for download
+        window.encryptedFile = {
+            url: downloadUrl,
+            name: selectedFile.name + '.encrypted'
+        };
+        
+        document.getElementById('file-result').style.display = 'block';
+        
+        progress.style.width = '100%';
+        showAlert('File đã được mã hóa thành công!', 'success');
+    } catch (error) {
+        showAlert('Lỗi mã hóa file: ' + error.message, 'error');
+    }
+});
+
+// File decryption
+document.getElementById('decrypt-file').addEventListener('click', async () => {
+    const key = document.getElementById('file-key').value;
+    const keySize = parseInt(document.getElementById('file-key-size').value);
+    
+    if (!key) {
+        showAlert('Vui lòng nhập khóa giải mã', 'error');
+        return;
+    }
+    
+    if (!selectedFile) {
+        showAlert('Vui lòng chọn file để giải mã', 'error');
+        return;
+    }
+    
+    try {
+        const progressBar = document.querySelector('.progress-bar');
+        const progress = document.getElementById('progress');
+        progressBar.style.display = 'block';
+        progress.style.width = '30%';
+        
+        // Read encrypted file
+        const fileContent = await readFileAsText(selectedFile);
+        progress.style.width = '50%';
+        
+        // Extract salt, iv and ciphertext
+        const saltSize = 128 / 4; // 32 hex characters
+        const ivSize = 128 / 4; // 32 hex characters
+        
+        const salt = CryptoJS.enc.Hex.parse(fileContent.substring(0, saltSize));
+        const iv = CryptoJS.enc.Hex.parse(fileContent.substring(saltSize, saltSize + ivSize));
+        const ciphertext = fileContent.substring(saltSize + ivSize);
+        
+        // Generate key
+        const derivedKey = CryptoJS.PBKDF2(key, salt, {
+            keySize: keySize/32,
+            iterations: 1000
+        });
+        
+        progress.style.width = '70%';
+        
+        // Decrypt
+        const decrypted = CryptoJS.AES.decrypt(ciphertext, derivedKey, { 
+            iv: iv,
+            padding: CryptoJS.pad.Pkcs7,
+            mode: CryptoJS.mode.CBC
+        });
+        
+        // Convert WordArray to ArrayBuffer
+        const decryptedArrayBuffer = wordArrayToArrayBuffer(decrypted);
+        
+        // Create blob and download link
+        const blob = new Blob([decryptedArrayBuffer]);
+        const downloadUrl = URL.createObjectURL(blob);
+        
+        // Store the file info for download
+        window.decryptedFile = {
+            url: downloadUrl,
+            name: selectedFile.name.endsWith('.encrypted') ? 
+                selectedFile.name.slice(0, -10) : 
+                'decrypted_' + selectedFile.name
+        };
+        
+        document.getElementById('file-result').style.display = 'block';
+        
+        progress.style.width = '100%';
+        showAlert('File đã được giải mã thành công!', 'success');
+    } catch (error) {
+        showAlert('Lỗi giải mã file: ' + error.message, 'error');
+    }
+});
+
+// Helper functions
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsText(file);
+    });
+}
+
+function wordArrayToArrayBuffer(wordArray) {
+    const words = wordArray.words;
+    const sigBytes = wordArray.sigBytes;
+    
+    const u8 = new Uint8Array(sigBytes);
+    
+    for (let i = 0; i < sigBytes; i++) {
+        const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+        u8[i] = byte;
+    }
+    
+    return u8.buffer;
+}
+
+// Download button event
+document.getElementById('download-result').addEventListener('click', function() {
+    if (window.encryptedFile) {
+        // Download encrypted file
+        const link = document.createElement('a');
+        link.href = window.encryptedFile.url;
+        link.download = window.encryptedFile.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showAlert('Đang tải xuống file mã hóa...', 'success');
+    } else if (window.decryptedFile) {
+        // Download decrypted file
+        const link = document.createElement('a');
+        link.href = window.decryptedFile.url;
+        link.download = window.decryptedFile.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showAlert('Đang tải xuống file giải mã...', 'success');
+    } else {
+        showAlert('Không có file để tải xuống', 'error');
+    }
+});
+</script>
+</body>
+</html>
